@@ -1,0 +1,900 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TX001 仓库绩效看板 - 优化版</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #18202a;
+      --muted: #647282;
+      --soft: #f6f8fb;
+      --line: #dde4ec;
+      --panel: #ffffff;
+      --brand: #1e5f74;
+      --brand-2: #2a9d8f;
+      --amber: #bd7b16;
+      --red: #b84a4a;
+      --green: #19705a;
+      --blue: #2c63aa;
+      --shadow: 0 16px 34px rgba(31, 45, 61, .10);
+      font-family: Inter, "SF Pro Display", "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: #eef3f7;
+      color: var(--ink);
+      letter-spacing: 0;
+    }
+
+    button, input, select {
+      font: inherit;
+    }
+
+    .shell {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 248px minmax(0, 1fr);
+    }
+
+    aside {
+      background: #102833;
+      color: #dce9ee;
+      padding: 22px 18px;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+
+    .brand-mark {
+      width: 36px;
+      height: 36px;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(255,255,255,.18);
+      background: #173947;
+      color: #fff;
+      border-radius: 8px;
+      font-weight: 800;
+    }
+
+    .brand strong {
+      display: block;
+      color: #fff;
+      font-size: 17px;
+    }
+
+    .brand span {
+      color: #9fb8c2;
+      font-size: 12px;
+    }
+
+    .nav {
+      display: grid;
+      gap: 8px;
+    }
+
+    .nav button, .side-action {
+      width: 100%;
+      border: 0;
+      border-radius: 8px;
+      color: #c9dbe2;
+      background: transparent;
+      text-align: left;
+      padding: 10px 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .nav button.active {
+      background: #e9f7f4;
+      color: #0e4d42;
+      font-weight: 750;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 99px;
+      background: currentColor;
+      opacity: .75;
+    }
+
+    .side-meta {
+      margin-top: 30px;
+      padding: 14px;
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.09);
+      border-radius: 8px;
+      color: #b8ccd4;
+      font-size: 12px;
+      line-height: 1.7;
+    }
+
+    .main {
+      min-width: 0;
+      padding: 24px 32px 40px;
+    }
+
+    header {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 20px;
+      align-items: start;
+      margin-bottom: 20px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 27px;
+      line-height: 1.2;
+      font-weight: 820;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+      font-size: 13px;
+    }
+
+    .status {
+      color: #0d5b4d;
+      background: #e6f5f1;
+      border: 1px solid #bfe4dc;
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-weight: 700;
+    }
+
+    .actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .icon-btn, .pill, .lang {
+      min-height: 36px;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      background: var(--panel);
+      color: var(--ink);
+      padding: 0 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+    }
+
+    .icon {
+      width: 16px;
+      height: 16px;
+      display: inline-block;
+      position: relative;
+      color: currentColor;
+      flex: 0 0 auto;
+    }
+
+    .icon.download::before {
+      content: "";
+      position: absolute;
+      left: 7px;
+      top: 1px;
+      width: 2px;
+      height: 10px;
+      background: currentColor;
+    }
+
+    .icon.download::after {
+      content: "";
+      position: absolute;
+      left: 3px;
+      top: 7px;
+      width: 8px;
+      height: 8px;
+      border-left: 2px solid currentColor;
+      border-bottom: 2px solid currentColor;
+      transform: rotate(-45deg);
+    }
+
+    .icon.key::before {
+      content: "";
+      position: absolute;
+      left: 1px;
+      top: 4px;
+      width: 7px;
+      height: 7px;
+      border: 2px solid currentColor;
+      border-radius: 50%;
+    }
+
+    .icon.key::after {
+      content: "";
+      position: absolute;
+      left: 9px;
+      top: 8px;
+      width: 8px;
+      height: 2px;
+      background: currentColor;
+      box-shadow: 3px 3px 0 currentColor;
+    }
+
+    .filters {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 8px 20px rgba(31,45,61,.05);
+      margin-bottom: 18px;
+    }
+
+    .filter-label {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .segmented {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .pill {
+      min-height: 32px;
+      padding: 0 12px;
+      color: var(--muted);
+      background: #f8fafc;
+    }
+
+    .pill.active {
+      background: #183441;
+      border-color: #183441;
+      color: #fff;
+    }
+
+    .range {
+      color: var(--muted);
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .kpis {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: 0 10px 24px rgba(31,45,61,.06);
+    }
+
+    .kpi {
+      padding: 18px;
+      min-height: 118px;
+      display: grid;
+      align-content: space-between;
+    }
+
+    .kpi small {
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .kpi strong {
+      display: block;
+      font-size: 31px;
+      line-height: 1;
+      margin-top: 8px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .kpi span {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.4fr) minmax(320px, .8fr);
+      gap: 16px;
+      align-items: start;
+    }
+
+    .panel {
+      padding: 18px;
+    }
+
+    .panel-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 17px;
+      line-height: 1.3;
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .role-grid {
+      display: grid;
+      gap: 12px;
+    }
+
+    .role {
+      display: grid;
+      grid-template-columns: 92px minmax(0, 1fr) 88px;
+      gap: 12px;
+      align-items: center;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbfcfd;
+    }
+
+    .role-name {
+      font-weight: 760;
+    }
+
+    .bar {
+      height: 10px;
+      border-radius: 999px;
+      background: #e5ebf0;
+      overflow: hidden;
+    }
+
+    .bar span {
+      display: block;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--brand-2), #85c6a8);
+    }
+
+    .role-value {
+      text-align: right;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .role-value small {
+      display: block;
+      color: var(--muted);
+      font-weight: 600;
+      font-size: 12px;
+      margin-top: 2px;
+    }
+
+    .rating-grid {
+      display: grid;
+      gap: 10px;
+    }
+
+    .rating {
+      display: grid;
+      grid-template-columns: 82px minmax(0, 1fr) 46px;
+      gap: 10px;
+      align-items: center;
+      font-size: 13px;
+    }
+
+    .tag {
+      border-radius: 999px;
+      padding: 5px 9px;
+      font-size: 12px;
+      font-weight: 760;
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    .tag.excellent { background: #e9f6ef; color: var(--green); }
+    .tag.good { background: #edf3ff; color: var(--blue); }
+    .tag.warn { background: #fff5df; color: var(--amber); }
+    .tag.risk { background: #fdecec; color: var(--red); }
+
+    .view {
+      display: none;
+      margin-top: 16px;
+    }
+
+    .view.active {
+      display: block;
+    }
+
+    .rank-layout {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .rank-card {
+      padding: 16px;
+    }
+
+    .rank-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      font-weight: 800;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      font-size: 13px;
+    }
+
+    th {
+      text-align: left;
+      color: var(--muted);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .02em;
+      border-bottom: 1px solid var(--line);
+      padding: 9px 8px;
+      background: #fbfcfd;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+
+    td {
+      padding: 10px 8px;
+      border-bottom: 1px solid #eef2f5;
+      vertical-align: middle;
+      font-variant-numeric: tabular-nums;
+    }
+
+    tbody tr:hover td {
+      background: #f7fbfb;
+    }
+
+    .num { text-align: right; }
+
+    .people-tools {
+      display: grid;
+      grid-template-columns: minmax(240px, 1fr) auto;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .search {
+      width: 100%;
+      min-height: 38px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 0 12px;
+      background: #fff;
+    }
+
+    .people-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .person {
+      padding: 15px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .person-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: start;
+    }
+
+    .person h3 {
+      margin: 0 0 3px;
+      font-size: 15px;
+    }
+
+    .person .role-chip {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .mini-stats {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .mini {
+      background: #f7f9fb;
+      border: 1px solid #edf1f5;
+      border-radius: 8px;
+      padding: 8px;
+      min-width: 0;
+    }
+
+    .mini span {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+      margin-bottom: 4px;
+      white-space: nowrap;
+    }
+
+    .mini strong {
+      font-size: 14px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .spark {
+      height: 28px;
+      display: flex;
+      align-items: end;
+      gap: 3px;
+    }
+
+    .spark i {
+      flex: 1;
+      min-width: 3px;
+      border-radius: 3px 3px 0 0;
+      background: #7ab2a8;
+      opacity: .85;
+    }
+
+    .heat-wrap {
+      overflow: auto;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      max-height: 620px;
+    }
+
+    .heat th, .heat td {
+      min-width: 58px;
+      text-align: center;
+      padding: 8px 7px;
+    }
+
+    .heat th:first-child,
+    .heat td:first-child {
+      min-width: 160px;
+      text-align: left;
+      position: sticky;
+      left: 0;
+      background: #fff;
+      z-index: 2;
+      box-shadow: 1px 0 0 var(--line);
+    }
+
+    .heat th:first-child {
+      background: #fbfcfd;
+      z-index: 3;
+    }
+
+    .cell {
+      border-radius: 6px;
+      font-weight: 750;
+      color: #153027;
+      background: #f2f5f7;
+      display: inline-block;
+      width: 42px;
+      padding: 5px 0;
+    }
+
+    .cell.empty {
+      color: #a8b2bc;
+      background: transparent;
+    }
+
+    .cell.low { background: #f5e3d3; color: #7d421d; }
+    .cell.mid { background: #dbeecf; color: #386a2d; }
+    .cell.high { background: #9ed8bd; color: #124936; }
+    .cell.top { background: #45a788; color: #fff; }
+
+    @media (max-width: 1050px) {
+      .shell { grid-template-columns: 1fr; }
+      aside {
+        height: auto;
+        position: static;
+        display: grid;
+        grid-template-columns: 1fr;
+      }
+      .nav { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+      .side-meta { display: none; }
+      .grid, .rank-layout { grid-template-columns: 1fr; }
+      .people-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 760px) {
+      .main { padding: 18px 14px 28px; }
+      header, .filters { grid-template-columns: 1fr; }
+      .actions { justify-content: flex-start; }
+      .kpis, .people-grid { grid-template-columns: 1fr; }
+      .nav { grid-template-columns: 1fr 1fr; }
+      .people-tools { grid-template-columns: 1fr; }
+      .role { grid-template-columns: 1fr; }
+      .role-value { text-align: left; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <aside>
+      <div class="brand">
+        <div class="brand-mark">TX</div>
+        <div>
+          <strong>TX001 仓库</strong>
+          <span>绩效运营看板</span>
+        </div>
+      </div>
+      <nav class="nav" aria-label="主视图">
+        <button class="active" data-view-btn="overview"><span class="dot"></span>总览</button>
+        <button data-view-btn="ranking"><span class="dot"></span>排名</button>
+        <button data-view-btn="people"><span class="dot"></span>员工</button>
+        <button data-view-btn="heatmap"><span class="dot"></span>热图</button>
+      </nav>
+      <div class="side-meta">
+        <strong>只读模式</strong><br>
+        数据区间：04-01 至 05-01<br>
+        样本：264 条记录<br>
+        评级按同岗位分位比较
+      </div>
+    </aside>
+
+    <div class="main">
+      <header>
+        <div>
+          <h1>TX001 仓库绩效看板</h1>
+          <div class="subtitle">
+            <span class="status">只读模式</span>
+            <span>04-01 ~ 05-01</span>
+            <span>264 条记录</span>
+          </div>
+        </div>
+        <div class="actions">
+          <button class="icon-btn" title="管理"><span class="icon key"></span>管理</button>
+          <button class="icon-btn" title="导出"><span class="icon download"></span>导出</button>
+          <button class="lang">中</button>
+          <button class="lang">EN</button>
+          <button class="lang">ES</button>
+        </div>
+      </header>
+
+      <section class="filters" aria-label="时间筛选">
+        <div class="filter-label">时间范围</div>
+        <div class="segmented">
+          <button class="pill active">全部</button>
+          <button class="pill">2026年4月</button>
+          <button class="pill">2026年5月</button>
+        </div>
+        <div class="range">04-01 ~ 05-01 · 27 天</div>
+      </section>
+
+      <section class="kpis" aria-label="关键指标">
+        <article class="card kpi"><small>总工作量</small><strong>106,358</strong><span>件</span></article>
+        <article class="card kpi"><small>总工时</small><strong>1,968h</strong><span>小时</span></article>
+        <article class="card kpi"><small>员工数</small><strong>26</strong><span>人</span></article>
+        <article class="card kpi"><small>统计天数</small><strong>27</strong><span>天</span></article>
+      </section>
+
+      <main>
+        <section class="view active" data-view="overview">
+          <div class="grid">
+            <article class="card panel">
+              <div class="panel-head">
+                <h2>各岗位平均效率</h2>
+                <span class="hint">单位：件/小时</span>
+              </div>
+              <div class="role-grid" id="roleGrid"></div>
+            </article>
+
+            <article class="card panel">
+              <div class="panel-head">
+                <h2>评级说明</h2>
+                <span class="hint">同岗位内比较</span>
+              </div>
+              <div class="rating-grid">
+                <div class="rating"><span class="tag excellent">优秀</span><span>同岗前 20%</span><strong>Top</strong></div>
+                <div class="rating"><span class="tag good">良好</span><span>50% - 80%</span><strong>Mid</strong></div>
+                <div class="rating"><span class="tag warn">待提升</span><span>20% - 50%</span><strong>Watch</strong></div>
+                <div class="rating"><span class="tag risk">需关注</span><span>末 20%</span><strong>Risk</strong></div>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section class="view" data-view="ranking">
+          <div class="rank-layout" id="rankLayout"></div>
+        </section>
+
+        <section class="view" data-view="people">
+          <div class="people-tools">
+            <input class="search" id="peopleSearch" placeholder="搜索员工、岗位或评级">
+            <div class="segmented" aria-label="岗位筛选">
+              <button class="pill active" data-role-filter="全部">全部</button>
+              <button class="pill" data-role-filter="拣货岗">拣货岗</button>
+              <button class="pill" data-role-filter="贴标岗">贴标岗</button>
+              <button class="pill" data-role-filter="打托岗">打托岗</button>
+            </div>
+          </div>
+          <div class="people-grid" id="peopleGrid"></div>
+        </section>
+
+        <section class="view" data-view="heatmap">
+          <article class="card panel">
+            <div class="panel-head">
+              <h2>每日效率热图</h2>
+              <span class="hint">颜色越深，效率越高；空白代表未出勤</span>
+            </div>
+            <div class="heat-wrap">
+              <table class="heat" id="heatTable"></table>
+            </div>
+          </article>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    const roles = [
+      { name: "拣货岗", value: 30.8, people: 14, color: "#2a9d8f" },
+      { name: "贴标岗", value: 35.6, people: 7, color: "#2c63aa" },
+      { name: "打托岗", value: 185.0, people: 5, color: "#bd7b16" }
+    ];
+
+    const people = [
+      { name: "LI JIA LONG", role: "打托岗", attendance: 3, bins: 0, workload: 3316, hours: 9, efficiency: 368.4, rating: "优秀" },
+      { name: "Merrissa Ortegon", role: "打托岗", attendance: 15, bins: 0, workload: 15140, hours: 78, efficiency: 194.1, rating: "良好" },
+      { name: "junjie fan", role: "打托岗", attendance: 14, bins: 0, workload: 12053, hours: 72, efficiency: 167.4, rating: "良好" },
+      { name: "xiaoyan yin", role: "打托岗", attendance: 24, bins: 0, workload: 17835, hours: 124, efficiency: 143.8, rating: "待提升" },
+      { name: "白宇", role: "打托岗", attendance: 1, bins: 0, workload: 51, hours: 1, efficiency: 51.0, rating: "需关注" },
+      { name: "Roman Garcia", role: "拣货岗", attendance: 5, bins: 99, workload: 2144, hours: 17, efficiency: 126.1, rating: "优秀" },
+      { name: "Jose Martin", role: "拣货岗", attendance: 9, bins: 930, workload: 3756, hours: 61, efficiency: 61.6, rating: "优秀" },
+      { name: "Gerson Sagastume", role: "拣货岗", attendance: 18, bins: 3391, workload: 5848, hours: 166, efficiency: 35.2, rating: "优秀" },
+      { name: "Arnol Sevilla", role: "拣货岗", attendance: 24, bins: 2954, workload: 6662, hours: 232, efficiency: 28.7, rating: "良好" },
+      { name: "Wilmer Ruesga", role: "拣货岗", attendance: 11, bins: 865, workload: 1454, hours: 51, efficiency: 28.5, rating: "良好" },
+      { name: "Eumar padron", role: "拣货岗", attendance: 24, bins: 4866, workload: 6684, hours: 236, efficiency: 28.3, rating: "良好" },
+      { name: "Ernesto Robles", role: "拣货岗", attendance: 7, bins: 1309, workload: 1450, hours: 61, efficiency: 23.8, rating: "良好" },
+      { name: "Diego Caldera", role: "拣货岗", attendance: 20, bins: 2307, workload: 4231, hours: 180, efficiency: 23.5, rating: "待提升" },
+      { name: "Dalia Posada", role: "拣货岗", attendance: 16, bins: 2059, workload: 2541, hours: 109, efficiency: 23.3, rating: "待提升" },
+      { name: "Omar Padron", role: "拣货岗", attendance: 24, bins: 4544, workload: 5525, hours: 246, efficiency: 22.5, rating: "待提升" },
+      { name: "Ariannys Castillo", role: "贴标岗", attendance: 13, bins: 0, workload: 10101, hours: 126, efficiency: 80.2, rating: "优秀" },
+      { name: "Glenda Bra", role: "贴标岗", attendance: 6, bins: 0, workload: 4451, hours: 56, efficiency: 79.5, rating: "优秀" },
+      { name: "Dalia Posada", role: "贴标岗", attendance: 8, bins: 0, workload: 1163, hours: 31, efficiency: 37.5, rating: "良好" },
+      { name: "Merrissa Ortegon", role: "贴标岗", attendance: 4, bins: 0, workload: 268, hours: 8, efficiency: 33.5, rating: "良好" },
+      { name: "Eumar padron", role: "贴标岗", attendance: 1, bins: 0, workload: 11, hours: 1, efficiency: 11.0, rating: "待提升" },
+      { name: "Wilmer Ruesga", role: "贴标岗", attendance: 2, bins: 0, workload: 20, hours: 3, efficiency: 6.7, rating: "需关注" },
+      { name: "LI JIA LONG", role: "贴标岗", attendance: 1, bins: 0, workload: 1, hours: 1, efficiency: 1.0, rating: "需关注" }
+    ];
+
+    const dates = ["04-01","04-02","04-03","04-05","04-06","04-07","04-08","04-09","04-10","04-12","04-13","04-14","04-15","04-16","04-17","04-19","04-20","04-21","04-22","04-23","04-24","04-26","04-30","05-01"];
+    const heatRows = [
+      { name: "Roman Garcia", role: "拣货岗", bins: 99, values: [0,0,0,0,0,224,0,48,0,0,0,0,0,0,0,61,224,0,0,0,144,0,0,0] },
+      { name: "Jose Martin", role: "拣货岗", bins: 930, values: [0,0,0,24,24,0,0,0,0,0,0,0,0,0,0,0,0,0,29,27,51,49,170,116] },
+      { name: "Gerson Sagastume", role: "拣货岗", bins: 3391, values: [38,27,18,35,35,33,0,32,35,28,27,83,30,38,29,34,30,38,13,0,0,0,0,0] },
+      { name: "Arnol Sevilla", role: "拣货岗", bins: 2954, values: [28,27,29,31,31,33,23,26,19,32,29,31,27,25,22,30,27,34,26,33,33,32,36,30] },
+      { name: "Eumar padron", role: "拣货岗", bins: 4866, values: [29,26,26,31,31,24,28,26,29,25,31,30,21,22,19,30,31,30,35,27,33,33,40,27] },
+      { name: "Omar Padron", role: "拣货岗", bins: 4544, values: [20,21,22,20,20,18,19,16,23,21,27,22,22,19,22,22,27,29,30,24,27,24,25,25] },
+      { name: "Ariannys Castillo", role: "贴标岗", bins: 0, values: [76,92,0,76,76,0,0,0,0,78,85,0,78,0,0,0,0,82,84,63,0,99,90,69] },
+      { name: "LI JIA LONG", role: "打托岗", bins: 0, values: [0,0,0,0,0,0,0,0,0,0,0,0,368,0,0,0,0,0,0,0,0,0,0,0] }
+    ];
+
+    const fmt = new Intl.NumberFormat("zh-CN");
+    const tagClass = rating => rating === "优秀" ? "excellent" : rating === "良好" ? "good" : rating === "待提升" ? "warn" : "risk";
+
+    document.querySelectorAll("[data-view-btn]").forEach(button => {
+      button.addEventListener("click", () => {
+        document.querySelectorAll("[data-view-btn]").forEach(b => b.classList.toggle("active", b === button));
+        document.querySelectorAll("[data-view]").forEach(v => v.classList.toggle("active", v.dataset.view === button.dataset.viewBtn));
+      });
+    });
+
+    document.querySelector("#roleGrid").innerHTML = roles.map(role => {
+      const width = role.value / 185 * 100;
+      return `<div class="role">
+        <div class="role-name">${role.name}</div>
+        <div class="bar"><span style="width:${width}%;background:${role.color}"></span></div>
+        <div class="role-value">${role.value.toFixed(1)}<small>${role.people} 人</small></div>
+      </div>`;
+    }).join("");
+
+    const rankLayout = document.querySelector("#rankLayout");
+    rankLayout.innerHTML = ["打托岗", "拣货岗", "贴标岗"].map(role => {
+      const rows = people.filter(p => p.role === role).sort((a, b) => b.efficiency - a.efficiency).slice(0, 6);
+      return `<article class="card rank-card">
+        <div class="rank-title"><span>${role}</span><span class="hint">${rows.length} 人</span></div>
+        <table>
+          <thead><tr><th>#</th><th>姓名</th><th class="num">效率</th><th>评级</th></tr></thead>
+          <tbody>${rows.map((p, i) => `<tr>
+            <td>${i + 1}</td><td><strong>${p.name}</strong></td><td class="num">${p.efficiency.toFixed(1)}</td><td><span class="tag ${tagClass(p.rating)}">${p.rating}</span></td>
+          </tr>`).join("")}</tbody>
+        </table>
+      </article>`;
+    }).join("");
+
+    const peopleGrid = document.querySelector("#peopleGrid");
+    const peopleSearch = document.querySelector("#peopleSearch");
+    let roleFilter = "全部";
+
+    function renderPeople() {
+      const q = peopleSearch.value.trim().toLowerCase();
+      const filtered = people.filter(p => {
+        const text = `${p.name} ${p.role} ${p.rating}`.toLowerCase();
+        return (roleFilter === "全部" || p.role === roleFilter) && (!q || text.includes(q));
+      });
+      peopleGrid.innerHTML = filtered.map(p => {
+        const heights = [p.efficiency, p.efficiency * .72, p.efficiency * .94, p.efficiency * .58, p.efficiency * .84].map(v => Math.max(14, Math.min(100, v / 130 * 100)));
+        return `<article class="card person">
+          <div class="person-top">
+            <div><h3>${p.name}</h3><div class="role-chip">${p.role}</div></div>
+            <span class="tag ${tagClass(p.rating)}">${p.rating}</span>
+          </div>
+          <div class="mini-stats">
+            <div class="mini"><span>库位</span><strong>${fmt.format(p.bins)}</strong></div>
+            <div class="mini"><span>工作量</span><strong>${fmt.format(p.workload)}</strong></div>
+            <div class="mini"><span>工时</span><strong>${p.hours}h</strong></div>
+            <div class="mini"><span>效率</span><strong>${p.efficiency.toFixed(1)}</strong></div>
+          </div>
+          <div class="spark" aria-hidden="true">${heights.map(h => `<i style="height:${h}%"></i>`).join("")}</div>
+        </article>`;
+      }).join("");
+    }
+
+    peopleSearch.addEventListener("input", renderPeople);
+    document.querySelectorAll("[data-role-filter]").forEach(button => {
+      button.addEventListener("click", () => {
+        roleFilter = button.dataset.roleFilter;
+        document.querySelectorAll("[data-role-filter]").forEach(b => b.classList.toggle("active", b === button));
+        renderPeople();
+      });
+    });
+    renderPeople();
+
+    function heatClass(value) {
+      if (!value) return "empty";
+      if (value >= 100) return "top";
+      if (value >= 50) return "high";
+      if (value >= 25) return "mid";
+      return "low";
+    }
+
+    document.querySelector("#heatTable").innerHTML = `
+      <thead><tr><th>员工</th><th>岗位</th><th>库位</th>${dates.map(d => `<th>${d}</th>`).join("")}</tr></thead>
+      <tbody>${heatRows.map(row => `<tr>
+        <td><strong>${row.name}</strong></td><td>${row.role}</td><td>${fmt.format(row.bins)}</td>
+        ${row.values.map(v => `<td><span class="cell ${heatClass(v)}">${v || "·"}</span></td>`).join("")}
+      </tr>`).join("")}</tbody>`;
+  </script>
+</body>
+</html>
