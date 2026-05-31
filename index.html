@@ -278,6 +278,10 @@
       color: var(--muted);
       font-size: 13px;
       white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
     }
 
     .select {
@@ -289,9 +293,25 @@
       padding: 0 34px 0 10px;
     }
 
+    .date-input {
+      min-height: 32px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      color: var(--ink);
+      padding: 0 8px;
+    }
+
+    .lang.active {
+      background: #183441;
+      border-color: #183441;
+      color: #fff;
+      font-weight: 760;
+    }
+
     .kpis {
       display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
       gap: 14px;
       margin-bottom: 18px;
     }
@@ -829,9 +849,9 @@
       </nav>
       <div class="side-meta">
         <strong id="sideMode">只读模式</strong><br>
-        数据区间：<span id="sideRange">04-01 至 05-01</span><br>
-        样本：<span id="sideCount">264</span> 条记录<br>
-        评级按同岗位分位比较
+        <span id="sideRangeLabel">数据区间</span>：<span id="sideRange">04-01 至 05-01</span><br>
+        <span id="sideSampleLabel">样本</span>：<span id="sideCount">264</span> <span id="sideRecordLabel">条记录</span><br>
+        <span id="sideRatingNote">评级按同岗位分位比较</span>
       </div>
     </aside>
 
@@ -848,26 +868,29 @@
         <div class="actions">
           <button class="icon-btn" id="manageBtn" title="管理"><span class="icon key"></span>管理</button>
           <button class="icon-btn" id="exportBtn" title="导出"><span class="icon download"></span>导出</button>
-          <button class="lang">中</button>
-          <button class="lang">EN</button>
-          <button class="lang">ES</button>
+          <button class="lang active" data-lang="zh">中</button>
+          <button class="lang" data-lang="en">EN</button>
+          <button class="lang" data-lang="es">ES</button>
         </div>
       </header>
 
       <section class="filters" aria-label="时间筛选">
-        <div class="filter-label">时间范围</div>
+        <div class="filter-label" data-i18n="timeRange">时间范围</div>
         <div class="segmented">
-          <button class="pill active" data-range="all">全部</button>
-          <button class="pill" data-range="apr">2026年4月</button>
-          <button class="pill" data-range="may">2026年5月</button>
+          <button class="pill active" data-range="all" data-i18n="all">全部</button>
+          <button class="pill" data-range="apr" data-i18n="apr2026">2026年4月</button>
+          <button class="pill" data-range="may" data-i18n="may2026">2026年5月</button>
+          <button class="pill" data-range="custom" data-i18n="custom">自定义</button>
         </div>
         <div class="range">
           <select class="select" id="globalRoleFilter" aria-label="岗位筛选">
-            <option value="全部">全部岗位</option>
+            <option value="全部" data-i18n="allRoles">全部岗位</option>
             <option value="拣货岗">拣货岗</option>
             <option value="贴标岗">贴标岗</option>
             <option value="打托岗">打托岗</option>
           </select>
+          <input class="date-input" id="startDate" type="date" value="2026-04-01" min="2026-04-01" max="2026-05-01" aria-label="开始日期">
+          <input class="date-input" id="endDate" type="date" value="2026-05-01" min="2026-04-01" max="2026-05-01" aria-label="结束日期">
           <span id="rangeDetail">04-01 ~ 05-01 · 27 天</span>
         </div>
       </section>
@@ -877,6 +900,8 @@
         <article class="card kpi"><small>总工时</small><strong id="kpiHours">1,968h</strong><span>小时</span><div class="delta" id="hoursDelta"></div></article>
         <article class="card kpi"><small>平均效率</small><strong id="kpiEfficiency">54.0</strong><span>件/小时</span><div class="delta" id="efficiencyDelta"></div></article>
         <article class="card kpi"><small>员工数</small><strong id="kpiPeople">26</strong><span>人</span><div class="delta" id="peopleDelta"></div></article>
+        <article class="card kpi"><small>到仓海柜</small><strong id="kpiContainers">42</strong><span>柜</span><div class="delta" id="containersDelta"></div></article>
+        <article class="card kpi"><small>散板</small><strong id="kpiLoosePallets">318</strong><span>板</span><div class="delta" id="loosePalletsDelta"></div></article>
       </section>
 
       <main>
@@ -978,9 +1003,73 @@
     };
 
     const rangeConfig = {
-      all: { label: "全部", short: "04-01 ~ 05-01", side: "04-01 至 05-01", days: 27, workload: 1, hours: 1, records: 264, mom: .94, yoy: .88 },
-      apr: { label: "2026年4月", short: "04-01 ~ 04-30", side: "04-01 至 04-30", days: 24, workload: .84, hours: .86, records: 238, mom: .91, yoy: .83 },
-      may: { label: "2026年5月", short: "05-01 ~ 05-01", side: "05-01", days: 1, workload: .16, hours: .14, records: 26, mom: 1.08, yoy: .97 }
+      all: { label: "全部", start: "2026-04-01", end: "2026-05-01", days: 27, workload: 1, hours: 1, records: 264, containers: 42, loosePallets: 318, mom: .94, yoy: .88 },
+      apr: { label: "2026年4月", start: "2026-04-01", end: "2026-04-30", days: 24, workload: .84, hours: .86, records: 238, containers: 36, loosePallets: 271, mom: .91, yoy: .83 },
+      may: { label: "2026年5月", start: "2026-05-01", end: "2026-05-01", days: 1, workload: .16, hours: .14, records: 26, containers: 6, loosePallets: 47, mom: 1.08, yoy: .97 }
+    };
+
+    const i18n = {
+      zh: {
+        pageTitle: "TX001 仓库绩效看板", appName: "TX001 仓库", appSub: "绩效运营看板",
+        overview: "总览", ranking: "排名", people: "员工", heatmap: "热图",
+        manage: "管理", export: "导出", readonly: "只读模式", admin: "管理模式",
+        timeRange: "时间范围", all: "全部", apr2026: "2026年4月", may2026: "2026年5月", custom: "自定义",
+        allRoles: "全部岗位", records: "条记录", days: "天", dataRange: "数据区间", sample: "样本",
+        ratingNote: "评级按同岗位分位比较", workload: "总工作量", hours: "总工时", avgEfficiency: "平均效率",
+        employeeCount: "员工数", oceanContainers: "到仓海柜", loosePallets: "散板", pieces: "件", hourUnit: "小时", piecesPerHour: "件/小时", personUnit: "人", containerUnit: "柜", palletUnit: "板",
+        roleChart: "岗位效率柱状图", linkedHint: "受时间与岗位筛选联动", roleAvg: "各岗位平均效率",
+        unitPiecesHour: "单位：件/小时", ratingRules: "评级说明", compareWithinRole: "同岗位内比较",
+        excellent: "优秀", good: "良好", warn: "待提升", risk: "需关注",
+        top20: "同岗前 20%", mid50: "50% - 80%", watch20: "20% - 50%", bottom20: "末 20%",
+        searchPlaceholder: "搜索员工、岗位或评级", heatTitle: "每日效率热图",
+        heatHint: "颜色越深，效率越高；空白代表未出勤", bins: "库位", attendance: "出勤",
+        name: "姓名", role: "岗位", rank: "排名", target: "目标", mom: "环比", yoy: "同比",
+        dashboardManage: "看板管理", close: "关闭", dashboardMode: "看板模式", efficiencyTarget: "效率目标（件/小时）",
+        exportScope: "导出范围", filtered: "当前筛选结果", allData: "全部数据", save: "保存设置",
+        saved: "设置已保存", exported: "CSV 已导出"
+      },
+      en: {
+        pageTitle: "TX001 Warehouse Performance Dashboard", appName: "TX001 Warehouse", appSub: "Performance Dashboard",
+        overview: "Overview", ranking: "Ranking", people: "People", heatmap: "Heatmap",
+        manage: "Manage", export: "Export", readonly: "Read-only", admin: "Admin mode",
+        timeRange: "Date range", all: "All", apr2026: "Apr 2026", may2026: "May 2026", custom: "Custom",
+        allRoles: "All roles", records: "records", days: "days", dataRange: "Range", sample: "Sample",
+        ratingNote: "Ratings compare employees within the same role", workload: "Total volume", hours: "Total hours",
+        avgEfficiency: "Avg efficiency", employeeCount: "Employees", oceanContainers: "Arrived containers", loosePallets: "Loose pallets", pieces: "pcs", hourUnit: "hours",
+        piecesPerHour: "pcs/hour", personUnit: "people", containerUnit: "containers", palletUnit: "pallets", roleChart: "Role Efficiency Bar Chart",
+        linkedHint: "Linked to date and role filters", roleAvg: "Average efficiency by role",
+        unitPiecesHour: "Unit: pcs/hour", ratingRules: "Rating Rules", compareWithinRole: "Within-role comparison",
+        excellent: "Excellent", good: "Good", warn: "Needs improvement", risk: "Attention needed",
+        top20: "Top 20% in role", mid50: "50% - 80%", watch20: "20% - 50%", bottom20: "Bottom 20%",
+        searchPlaceholder: "Search employee, role, or rating", heatTitle: "Daily Efficiency Heatmap",
+        heatHint: "Darker color means higher efficiency; blank means no attendance", bins: "Bins",
+        attendance: "Attendance", name: "Name", role: "Role", rank: "Rank", target: "Target", mom: "MoM", yoy: "YoY",
+        dashboardManage: "Dashboard Management", close: "Close", dashboardMode: "Dashboard mode",
+        efficiencyTarget: "Efficiency target (pcs/hour)", exportScope: "Export scope",
+        filtered: "Current filters", allData: "All data", save: "Save settings",
+        saved: "Settings saved", exported: "CSV exported"
+      },
+      es: {
+        pageTitle: "Panel de Rendimiento del Almacen TX001", appName: "Almacen TX001", appSub: "Panel de rendimiento",
+        overview: "Resumen", ranking: "Ranking", people: "Personal", heatmap: "Mapa de calor",
+        manage: "Gestionar", export: "Exportar", readonly: "Solo lectura", admin: "Modo admin",
+        timeRange: "Rango de fechas", all: "Todo", apr2026: "Abr 2026", may2026: "May 2026", custom: "Personalizado",
+        allRoles: "Todos los puestos", records: "registros", days: "dias", dataRange: "Rango", sample: "Muestra",
+        ratingNote: "Las calificaciones comparan empleados del mismo puesto", workload: "Volumen total",
+        hours: "Horas totales", avgEfficiency: "Eficiencia media", employeeCount: "Empleados", oceanContainers: "Contenedores recibidos", loosePallets: "Tarimas sueltas", pieces: "pzas",
+        hourUnit: "horas", piecesPerHour: "pzas/hora", personUnit: "personas", containerUnit: "contenedores", palletUnit: "tarimas", roleChart: "Grafico de eficiencia por puesto",
+        linkedHint: "Vinculado a filtros de fecha y puesto", roleAvg: "Eficiencia media por puesto",
+        unitPiecesHour: "Unidad: pzas/hora", ratingRules: "Reglas de calificacion", compareWithinRole: "Comparacion dentro del puesto",
+        excellent: "Excelente", good: "Bueno", warn: "Por mejorar", risk: "Atencion",
+        top20: "Top 20% del puesto", mid50: "50% - 80%", watch20: "20% - 50%", bottom20: "Ultimo 20%",
+        searchPlaceholder: "Buscar empleado, puesto o calificacion", heatTitle: "Mapa diario de eficiencia",
+        heatHint: "Color mas oscuro = mayor eficiencia; vacio = sin asistencia", bins: "Ubicaciones",
+        attendance: "Asistencia", name: "Nombre", role: "Puesto", rank: "Ranking", target: "Meta", mom: "Mensual", yoy: "Anual",
+        dashboardManage: "Gestion del panel", close: "Cerrar", dashboardMode: "Modo del panel",
+        efficiencyTarget: "Meta de eficiencia (pzas/hora)", exportScope: "Alcance de exportacion",
+        filtered: "Filtros actuales", allData: "Todos los datos", save: "Guardar",
+        saved: "Configuracion guardada", exported: "CSV exportado"
+      }
     };
 
     const basePeople = [
@@ -1020,21 +1109,69 @@
       { name: "LI JIA LONG", role: "打托岗", bins: 0, values: [0,0,0,0,0,0,0,0,0,0,0,0,368,0,0,0,0,0,0,0,0,0,0,0] }
     ];
 
-    const fmt = new Intl.NumberFormat("zh-CN");
+    let fmt = new Intl.NumberFormat("zh-CN");
     const tagClass = rating => rating === "优秀" ? "excellent" : rating === "良好" ? "good" : rating === "待提升" ? "warn" : "risk";
     const state = {
       range: "all",
+      customStart: "2026-04-01",
+      customEnd: "2026-05-01",
       globalRole: "全部",
       peopleRole: "全部",
       target: 55,
-      mode: "readonly"
+      mode: "readonly",
+      lang: "zh"
     };
 
     const qs = selector => document.querySelector(selector);
     const qsa = selector => Array.from(document.querySelectorAll(selector));
+    const t = key => i18n[state.lang][key] || i18n.zh[key] || key;
+    const roleLabel = role => ({
+      zh: { "全部": "全部", "拣货岗": "拣货岗", "贴标岗": "贴标岗", "打托岗": "打托岗" },
+      en: { "全部": "All", "拣货岗": "Picking", "贴标岗": "Labeling", "打托岗": "Palletizing" },
+      es: { "全部": "Todo", "拣货岗": "Picking", "贴标岗": "Etiquetado", "打托岗": "Paletizado" }
+    }[state.lang][role] || role);
+    const ratingLabel = rating => ({
+      "优秀": t("excellent"), "良好": t("good"), "待提升": t("warn"), "需关注": t("risk")
+    }[rating] || rating);
+    const dateToMd = value => value.slice(5);
+    const dateIndex = value => dates.indexOf(dateToMd(value));
+    const rangeShort = cfg => `${dateToMd(cfg.start)} ~ ${dateToMd(cfg.end)}`;
+    const rangeSide = cfg => state.lang === "zh" ? `${dateToMd(cfg.start)} 至 ${dateToMd(cfg.end)}` : rangeShort(cfg);
+
+    function selectedDateIndexes(cfg = activeRange()) {
+      return dates.map((date, index) => ({ date, index })).filter(item => {
+        const full = `2026-${item.date}`;
+        return full >= cfg.start && full <= cfg.end;
+      });
+    }
+
+    function activeRange(rangeKey = state.range) {
+      if (rangeKey !== "custom") return rangeConfig[rangeKey];
+      let start = state.customStart;
+      let end = state.customEnd;
+      if (start > end) [start, end] = [end, start];
+      const selected = dates.filter(date => {
+        const full = `2026-${date}`;
+        return full >= start && full <= end;
+      });
+      const fraction = Math.max(selected.length / dates.length, 1 / dates.length);
+      return {
+        label: t("custom"),
+        start,
+        end,
+        days: selected.length || 1,
+        workload: fraction,
+        hours: Math.max(.08, fraction * .98),
+        records: Math.max(1, Math.round(264 * fraction)),
+        containers: Math.max(1, Math.round(42 * fraction)),
+        loosePallets: Math.max(1, Math.round(318 * fraction)),
+        mom: .96,
+        yoy: .9
+      };
+    }
 
     function scaledPeople(rangeKey = state.range) {
-      const cfg = rangeConfig[rangeKey];
+      const cfg = activeRange(rangeKey);
       return basePeople.map(person => {
         const workload = Math.max(1, Math.round(person.workload * cfg.workload));
         const hours = Math.max(1, Math.round(person.hours * cfg.hours));
@@ -1105,21 +1242,21 @@
       const rows = currentPeople();
       const q = peopleSearch.value.trim().toLowerCase();
       const filtered = rows.filter(p => {
-        const text = `${p.name} ${p.role} ${p.rating}`.toLowerCase();
+        const text = `${p.name} ${p.role} ${roleLabel(p.role)} ${p.rating} ${ratingLabel(p.rating)}`.toLowerCase();
         return (state.peopleRole === "全部" || p.role === state.peopleRole) && (!q || text.includes(q));
       });
       peopleGrid.innerHTML = filtered.map(p => {
         const heights = [p.efficiency, p.efficiency * .72, p.efficiency * .94, p.efficiency * .58, p.efficiency * .84].map(v => Math.max(14, Math.min(100, v / 140 * 100)));
         return `<article class="card person">
           <div class="person-top">
-            <div><h3>${p.name}</h3><div class="role-chip">${p.role}</div></div>
-            <span class="tag ${tagClass(p.rating)}">${p.rating}</span>
+            <div><h3>${p.name}</h3><div class="role-chip">${roleLabel(p.role)}</div></div>
+            <span class="tag ${tagClass(p.rating)}">${ratingLabel(p.rating)}</span>
           </div>
           <div class="mini-stats">
-            <div class="mini"><span>库位</span><strong>${fmt.format(p.bins)}</strong></div>
-            <div class="mini"><span>工作量</span><strong>${fmt.format(p.workload)}</strong></div>
-            <div class="mini"><span>工时</span><strong>${p.hours}h</strong></div>
-            <div class="mini"><span>效率</span><strong>${p.efficiency.toFixed(1)}</strong></div>
+            <div class="mini"><span>${t("bins")}</span><strong>${fmt.format(p.bins)}</strong></div>
+            <div class="mini"><span>${t("workload")}</span><strong>${fmt.format(p.workload)}</strong></div>
+            <div class="mini"><span>${t("hours")}</span><strong>${p.hours}h</strong></div>
+            <div class="mini"><span>${t("avgEfficiency")}</span><strong>${p.efficiency.toFixed(1)}</strong></div>
           </div>
           <div class="spark" aria-hidden="true">${heights.map(h => `<i style="height:${h}%"></i>`).join("")}</div>
         </article>`;
@@ -1136,7 +1273,7 @@
     });
 
     function renderKpis(rows) {
-      const cfg = rangeConfig[state.range];
+      const cfg = activeRange();
       const total = totals(rows);
       const previous = {
         workload: total.workload * cfg.mom,
@@ -1152,10 +1289,14 @@
       qs("#kpiHours").textContent = `${fmt.format(total.hours)}h`;
       qs("#kpiEfficiency").textContent = total.efficiency.toFixed(1);
       qs("#kpiPeople").textContent = fmt.format(total.people);
-      qs("#workloadDelta").innerHTML = deltaHtml(pct(total.workload, previous.workload), "环比") + deltaHtml(pct(total.workload, lastYear.workload), "同比");
-      qs("#hoursDelta").innerHTML = deltaHtml(pct(total.hours, previous.hours), "环比") + deltaHtml(pct(total.hours, lastYear.hours), "同比");
-      qs("#efficiencyDelta").innerHTML = deltaHtml(pct(total.efficiency, previous.efficiency), "环比") + deltaHtml(pct(total.efficiency, lastYear.efficiency), "同比");
-      qs("#peopleDelta").innerHTML = `<b>目标 ${state.target}</b>`;
+      qs("#kpiContainers").textContent = fmt.format(cfg.containers);
+      qs("#kpiLoosePallets").textContent = fmt.format(cfg.loosePallets);
+      qs("#workloadDelta").innerHTML = deltaHtml(pct(total.workload, previous.workload), t("mom")) + deltaHtml(pct(total.workload, lastYear.workload), t("yoy"));
+      qs("#hoursDelta").innerHTML = deltaHtml(pct(total.hours, previous.hours), t("mom")) + deltaHtml(pct(total.hours, lastYear.hours), t("yoy"));
+      qs("#efficiencyDelta").innerHTML = deltaHtml(pct(total.efficiency, previous.efficiency), t("mom")) + deltaHtml(pct(total.efficiency, lastYear.efficiency), t("yoy"));
+      qs("#peopleDelta").innerHTML = `<b>${t("target")} ${state.target}</b>`;
+      qs("#containersDelta").innerHTML = deltaHtml(pct(cfg.containers, cfg.containers * cfg.mom), t("mom")) + deltaHtml(pct(cfg.containers, cfg.containers * cfg.yoy), t("yoy"));
+      qs("#loosePalletsDelta").innerHTML = deltaHtml(pct(cfg.loosePallets, cfg.loosePallets * cfg.mom), t("mom")) + deltaHtml(pct(cfg.loosePallets, cfg.loosePallets * cfg.yoy), t("yoy"));
     }
 
     function renderRoleOverview(rows) {
@@ -1165,15 +1306,15 @@
         const height = Math.max(8, role.value / max * 100);
         return `<div class="bar-col">
           <div class="bar-wrap"><div class="bar-vertical" data-value="${role.value.toFixed(1)}" style="height:${height}%;background:${role.color}"></div></div>
-          <div class="bar-label">${role.name}<br>${role.people} 人</div>
+          <div class="bar-label">${roleLabel(role.name)}<br>${role.people} ${t("personUnit")}</div>
         </div>`;
       }).join("");
       qs("#roleGrid").innerHTML = stats.map(role => {
         const width = role.value / max * 100;
         return `<div class="role">
-          <div class="role-name">${role.name}</div>
+          <div class="role-name">${roleLabel(role.name)}</div>
           <div class="bar"><span style="width:${width}%;background:${role.color}"></span></div>
-          <div class="role-value">${role.value.toFixed(1)}<small>${role.people} 人</small></div>
+          <div class="role-value">${role.value.toFixed(1)}<small>${role.people} ${t("personUnit")}</small></div>
         </div>`;
       }).join("");
     }
@@ -1183,11 +1324,11 @@
       qs("#rankLayout").innerHTML = roles.map(role => {
         const rankingRows = rows.filter(p => p.role === role).sort((a, b) => b.efficiency - a.efficiency).slice(0, 8);
         return `<article class="card rank-card">
-          <div class="rank-title"><span>${role}</span><span class="hint">${rankingRows.length} 人</span></div>
+          <div class="rank-title"><span>${roleLabel(role)}</span><span class="hint">${rankingRows.length} ${t("personUnit")}</span></div>
           <table>
-            <thead><tr><th>#</th><th>姓名</th><th class="num">工作量</th><th class="num">效率</th><th>评级</th></tr></thead>
+            <thead><tr><th>#</th><th>${t("name")}</th><th class="num">${t("workload")}</th><th class="num">${t("avgEfficiency")}</th><th>${t("ratingRules")}</th></tr></thead>
             <tbody>${rankingRows.map((p, i) => `<tr>
-              <td>${i + 1}</td><td><strong>${p.name}</strong></td><td class="num">${fmt.format(p.workload)}</td><td class="num">${p.efficiency.toFixed(1)}</td><td><span class="tag ${tagClass(p.rating)}">${p.rating}</span></td>
+              <td>${i + 1}</td><td><strong>${p.name}</strong></td><td class="num">${fmt.format(p.workload)}</td><td class="num">${p.efficiency.toFixed(1)}</td><td><span class="tag ${tagClass(p.rating)}">${ratingLabel(p.rating)}</span></td>
             </tr>`).join("")}</tbody>
           </table>
         </article>`;
@@ -1203,17 +1344,13 @@
     }
 
     function renderHeatmap() {
-      const cfg = rangeConfig[state.range];
+      const cfg = activeRange();
       const rows = heatRows.filter(row => state.globalRole === "全部" || row.role === state.globalRole);
-      const dateIndexes = dates.map((date, index) => ({ date, index })).filter(item => {
-        if (state.range === "apr") return item.date.startsWith("04-");
-        if (state.range === "may") return item.date.startsWith("05-");
-        return true;
-      });
+      const dateIndexes = selectedDateIndexes(cfg);
       qs("#heatTable").innerHTML = `
-        <thead><tr><th>员工</th><th>岗位</th><th>库位</th>${dateIndexes.map(item => `<th>${item.date}</th>`).join("")}</tr></thead>
+        <thead><tr><th>${t("name")}</th><th>${t("role")}</th><th>${t("bins")}</th>${dateIndexes.map(item => `<th>${item.date}</th>`).join("")}</tr></thead>
         <tbody>${rows.map(row => `<tr>
-          <td><strong>${row.name}</strong></td><td>${row.role}</td><td>${fmt.format(Math.round(row.bins * cfg.workload))}</td>
+          <td><strong>${row.name}</strong></td><td>${roleLabel(row.role)}</td><td>${fmt.format(Math.round(row.bins * cfg.workload))}</td>
           ${dateIndexes.map(item => {
             const value = row.values[item.index] ? Math.round(row.values[item.index] * (cfg.workload / cfg.hours)) : 0;
             return `<td><span class="cell ${heatClass(value)}">${value || "·"}</span></td>`;
@@ -1222,18 +1359,96 @@
     }
 
     function renderMeta(rows) {
-      const cfg = rangeConfig[state.range];
+      const cfg = activeRange();
       const records = Math.max(1, Math.round(cfg.records * (state.globalRole === "全部" ? 1 : rows.length / basePeople.length)));
-      qs("#rangeText").textContent = cfg.short;
-      qs("#rangeDetail").textContent = `${cfg.short} · ${cfg.days} 天`;
-      qs("#recordText").textContent = `${records} 条记录`;
-      qs("#sideRange").textContent = cfg.side;
+      qs("#rangeText").textContent = rangeShort(cfg);
+      qs("#rangeDetail").textContent = `${rangeShort(cfg)} · ${cfg.days} ${t("days")}`;
+      qs("#recordText").textContent = `${records} ${t("records")}`;
+      qs("#sideRange").textContent = rangeSide(cfg);
       qs("#sideCount").textContent = records;
-      qs("#modeStatus").textContent = state.mode === "readonly" ? "只读模式" : "管理模式";
-      qs("#sideMode").textContent = state.mode === "readonly" ? "只读模式" : "管理模式";
+      qs("#modeStatus").textContent = state.mode === "readonly" ? t("readonly") : t("admin");
+      qs("#sideMode").textContent = state.mode === "readonly" ? t("readonly") : t("admin");
+    }
+
+    function inboundMetrics() {
+      const cfg = activeRange();
+      return {
+        containers: cfg.containers,
+        loosePallets: cfg.loosePallets
+      };
+    }
+
+    function applyLanguage() {
+      fmt = new Intl.NumberFormat(state.lang === "zh" ? "zh-CN" : state.lang === "es" ? "es-ES" : "en-US");
+      document.documentElement.lang = state.lang === "zh" ? "zh-CN" : state.lang === "es" ? "es" : "en";
+      document.title = t("pageTitle");
+      qs(".brand strong").textContent = t("appName");
+      qs(".brand span").textContent = t("appSub");
+      qs("h1").textContent = t("pageTitle");
+      qsa("[data-view-btn]").forEach(button => {
+        button.childNodes[1].nodeValue = {
+          overview: t("overview"), ranking: t("ranking"), people: t("people"), heatmap: t("heatmap")
+        }[button.dataset.viewBtn];
+      });
+      qs("#manageBtn").lastChild.nodeValue = t("manage");
+      qs("#exportBtn").lastChild.nodeValue = t("export");
+      qs("[data-i18n='timeRange']").textContent = t("timeRange");
+      qsa("[data-range]").forEach(button => {
+        button.textContent = t(button.dataset.range === "all" ? "all" : button.dataset.range === "apr" ? "apr2026" : button.dataset.range === "may" ? "may2026" : "custom");
+      });
+      qs("#globalRoleFilter").options[0].textContent = t("allRoles");
+      Array.from(qs("#globalRoleFilter").options).forEach(option => {
+        if (option.value !== "全部") option.textContent = roleLabel(option.value);
+      });
+      qs("#peopleSearch").placeholder = t("searchPlaceholder");
+      qsa("[data-role-filter]").forEach(button => {
+        button.textContent = button.dataset.roleFilter === "全部" ? t("all") : roleLabel(button.dataset.roleFilter);
+      });
+      const kpiLabels = qsa(".kpi small");
+      [t("workload"), t("hours"), t("avgEfficiency"), t("employeeCount"), t("oceanContainers"), t("loosePallets")].forEach((label, index) => kpiLabels[index].textContent = label);
+      const kpiUnits = qsa(".kpi > span");
+      [t("pieces"), t("hourUnit"), t("piecesPerHour"), t("personUnit"), t("containerUnit"), t("palletUnit")].forEach((label, index) => kpiUnits[index].textContent = label);
+      const panelTitles = qsa(".panel-head h2");
+      panelTitles[0].textContent = t("roleChart");
+      panelTitles[1].textContent = t("roleAvg");
+      panelTitles[2].textContent = t("ratingRules");
+      panelTitles[3].textContent = t("heatTitle");
+      const panelHints = qsa(".panel-head .hint");
+      panelHints[0].textContent = t("linkedHint");
+      panelHints[1].textContent = t("unitPiecesHour");
+      panelHints[2].textContent = t("compareWithinRole");
+      panelHints[3].textContent = t("heatHint");
+      const ratingRows = qsa(".rating");
+      const ratingData = [
+        ["excellent", t("excellent"), t("top20"), "Top"],
+        ["good", t("good"), t("mid50"), "Mid"],
+        ["warn", t("warn"), t("watch20"), "Watch"],
+        ["risk", t("risk"), t("bottom20"), "Risk"]
+      ];
+      ratingRows.forEach((row, index) => {
+        row.children[0].textContent = ratingData[index][1];
+        row.children[1].textContent = ratingData[index][2];
+        row.children[2].textContent = ratingData[index][3];
+      });
+      qs("#manageTitle").textContent = t("dashboardManage");
+      qs("#closeManageBtn").textContent = t("close");
+      const fields = qsa(".field");
+      fields[0].childNodes[0].nodeValue = t("dashboardMode");
+      fields[1].childNodes[0].nodeValue = t("efficiencyTarget");
+      fields[2].childNodes[0].nodeValue = t("exportScope");
+      qs("#modeSelect").options[0].textContent = t("readonly");
+      qs("#modeSelect").options[1].textContent = t("admin");
+      qs("#exportScope").options[0].textContent = t("filtered");
+      qs("#exportScope").options[1].textContent = t("allData");
+      qs("#saveManageBtn").textContent = t("save");
+      qs("#sideRangeLabel").textContent = t("dataRange");
+      qs("#sideSampleLabel").textContent = t("sample");
+      qs("#sideRecordLabel").textContent = t("records");
+      qs("#sideRatingNote").textContent = t("ratingNote");
     }
 
     function renderAll() {
+      applyLanguage();
       const rows = currentPeople();
       renderMeta(rows);
       renderKpis(rows);
@@ -1246,7 +1461,23 @@
     qsa("[data-range]").forEach(button => {
       button.addEventListener("click", () => {
         state.range = button.dataset.range;
+        if (state.range !== "custom") {
+          qs("#startDate").value = rangeConfig[state.range].start;
+          qs("#endDate").value = rangeConfig[state.range].end;
+          state.customStart = qs("#startDate").value;
+          state.customEnd = qs("#endDate").value;
+        }
         qsa("[data-range]").forEach(item => item.classList.toggle("active", item === button));
+        renderAll();
+      });
+    });
+
+    ["#startDate", "#endDate"].forEach(selector => {
+      qs(selector).addEventListener("change", () => {
+        state.range = "custom";
+        state.customStart = qs("#startDate").value;
+        state.customEnd = qs("#endDate").value;
+        qsa("[data-range]").forEach(item => item.classList.toggle("active", item.dataset.range === "custom"));
         renderAll();
       });
     });
@@ -1254,6 +1485,14 @@
     qs("#globalRoleFilter").addEventListener("change", event => {
       state.globalRole = event.target.value;
       renderAll();
+    });
+
+    qsa("[data-lang]").forEach(button => {
+      button.addEventListener("click", () => {
+        state.lang = button.dataset.lang;
+        qsa("[data-lang]").forEach(item => item.classList.toggle("active", item === button));
+        renderAll();
+      });
     });
 
     qs("#manageBtn").addEventListener("click", () => {
@@ -1273,7 +1512,7 @@
       state.target = Number(qs("#targetInput").value) || 55;
       qs("#manageModal").classList.remove("open");
       renderAll();
-      showToast("设置已保存");
+      showToast(t("saved"));
     });
 
     function showToast(message) {
@@ -1285,9 +1524,10 @@
 
     function downloadCsv() {
       const rows = qs("#exportScope")?.value === "all" ? scaledPeople() : currentPeople();
-      const header = ["姓名", "岗位", "出勤", "库位", "工作量", "工时", "效率", "评级"];
+      const inbound = inboundMetrics();
+      const header = [t("name"), t("role"), t("attendance"), t("bins"), t("workload"), t("hours"), t("avgEfficiency"), t("ratingRules"), t("oceanContainers"), t("loosePallets")];
       const lines = rows.map(row => [
-        row.name, row.role, row.attendance, row.bins, row.workload, row.hours, row.efficiency.toFixed(1), row.rating
+        row.name, roleLabel(row.role), row.attendance, row.bins, row.workload, row.hours, row.efficiency.toFixed(1), ratingLabel(row.rating), inbound.containers, inbound.loosePallets
       ]);
       const csv = [header, ...lines].map(line => line.map(value => `"${String(value).replace(/"/g, '""')}"`).join(",")).join("\n");
       const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8" });
@@ -1299,7 +1539,7 @@
       link.click();
       link.remove();
       URL.revokeObjectURL(url);
-      showToast("CSV 已导出");
+      showToast(t("exported"));
     }
 
     qs("#exportBtn").addEventListener("click", downloadCsv);
